@@ -1,3 +1,4 @@
+// src/controllers/authController.js
 import User from "../models/userModel.js";
 import generateToken from "../utils/generateToken.js";
 
@@ -10,8 +11,8 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const userExists = await User.findOne({ email });
-    if (userExists) {
+    const existing = await User.findOne({ email });
+    if (existing) {
       return res.status(400).json({ message: "User already exists" });
     }
 
@@ -19,11 +20,15 @@ export const registerUser = async (req, res) => {
 
     const token = generateToken(user._id);
 
-    return res.status(201).json({
+    const userPayload = {
       _id: user._id,
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
+    };
+
+    return res.status(201).json({
+      user: userPayload,
       token,
     });
   } catch (error) {
@@ -42,24 +47,26 @@ export const loginUser = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
-
     if (!user) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
     const isMatch = await user.matchPassword(password);
-
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
     const token = generateToken(user._id);
 
-    return res.json({
+    const userPayload = {
       _id: user._id,
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
+    };
+
+    return res.json({
+      user: userPayload,
       token,
     });
   } catch (error) {
